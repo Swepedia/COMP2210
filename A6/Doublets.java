@@ -85,11 +85,11 @@ public class Doublets implements WordLadderGame {
 
    public List<String> getLadder(String start, String end) {
       Stack<String> path = new Stack<>();
-      List<String> visited = new ArrayList<>();
+      TreeSet<String> visited = new TreeSet<>();
       List<String> op = new ArrayList<>();
       
       if(start == null || end == null) {
-         return visited;
+         return op;
       }
       // if(start.equals(end)) {
          // visited.add(start);
@@ -99,19 +99,26 @@ public class Doublets implements WordLadderGame {
       path.push(start);
       List<String> neighbors;
       String current = start;
-      while(!path.peek().equals(end) && !path.empty()) {
+      visited.add(start);
+      while(!path.empty() && !path.peek().equals(end)) {
          neighbors = getNeighbors(current);
          if(hasNeighbors(visited, neighbors)) {
             for(int i = 0; i < neighbors.size(); i++) {
                if(!visited.contains(neighbors.get(i))) {
                   visited.add(neighbors.get(i));
                   path.push(neighbors.get(i));
+                  break;
                }
             }
+            current = path.peek();
          }
          else {
             path.pop();
+            if(!path.empty()) {
+               current = path.peek();
+            }
          }
+         
       }
       while(!path.empty()) {
          op.add(0, path.pop());
@@ -119,7 +126,7 @@ public class Doublets implements WordLadderGame {
       return op;
    }
    
-   private boolean hasNeighbors(List<String> visited, List<String> neighbors) {
+   private boolean hasNeighbors(TreeSet<String> visited, List<String> neighbors) {
       for(int i = 0; i < neighbors.size(); i++) {
          if(!visited.contains(neighbors.get(i))) {
             return true;
@@ -135,30 +142,64 @@ public class Doublets implements WordLadderGame {
 */
    public List<String> getMinLadder(String start, String end) {
       Deque<String> path = new ArrayDeque<>();
-      List<String> visited = new ArrayList<>();
+      Stack<String> minPath = new Stack<>();
+      TreeSet<String> visited = new TreeSet<>();
       List<String> op = new ArrayList<>();
+      int distance = 0;
       
       if(start == null) {
-         return visited;
+         return op;
       }
       
       path.addLast(start);
       visited.add(start);
       List<String> neighbors;
       String current;
+      boolean br = false;
       
-      while(!path.contains(end) && !path.isEmpty()) {
+      while(!path.contains(end) && !path.isEmpty() && !br) {
          current = path.removeFirst();
          for(String c : getNeighbors(current)) {
+            if(getNeighbors(current).contains(end)) {
+               path.addLast(c);
+               distance++;
+               br = true;
+               break;
+            }
             if(!visited.contains(c)) {
                visited.add(c);
                path.addLast(c);
+               //current = path.peek();
             }
          }
+         distance++;
       }
       while(!path.isEmpty()) {
          op.add(path.removeFirst());
       }
+      
+      minPath.push(start);
+      current = op.get(0);
+      visited.clear();
+      visited.add(start);
+      boolean done = false;
+      while(!minPath.peek().equals(end) && !minPath.empty() && !done) {
+         neighbors = getNeighbors(current);
+         if(hasNeighbors(visited, neighbors)) {
+            for(String s : neighbors) {
+               if(!visited.contains(s)) {
+                  visited.add(s);
+                  minPath.push(s);
+               }
+            }
+            current = minPath.peek();
+         }
+         else {
+            minPath.pop();
+            current = minPath.peek();
+         }
+      }
+      
       return op;
    }
 
@@ -197,11 +238,11 @@ public class Doublets implements WordLadderGame {
       if(sequence == null) {
          return false;
       }
-      if(sequence.size() < 2) {
+      if(sequence.size() < 1) {
          return false;
       }
       for(int i = 0; i < sequence.size() - 1; i++) {
-         if(getHammingDistance(sequence.get(i), sequence.get(i + 1)) > 1 || !isWord(sequence.get(i))) {
+         if(getHammingDistance(sequence.get(i), sequence.get(i + 1)) > 1 || !isWord(sequence.get(i)) || sequence.get(i).equals(sequence.get(i + 1))) {
             return false;
          }
       }
